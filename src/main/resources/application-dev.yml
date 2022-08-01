@@ -1,0 +1,42 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /test-application
+  error:
+    include-message: always
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    use-root-path: true
+  show-actuator: false
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ft_user_service?schema=public
+    username: postgres
+    password: postgres
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 3
+      maximum-pool-size: 30
+      idle-timeout: 600000
+      connection-test-query: SELECT 1
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        ddl-auto: validate
+  flyway:
+    schemas: public
+    baseline-on-migrate: true
+    placeholder-replacement: false
+
+logging:
+  level:
+    root: info
