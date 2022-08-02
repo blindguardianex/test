@@ -40,3 +40,6 @@ spring:
 logging:
   level:
     root: info
+    ru:
+      smartech:
+        app: debug

@@ -44,13 +44,15 @@ public class User {
     @Column(name = "birth_date", unique = true, nullable = false)
     private LocalDate birthDate;
 
-    @Schema(hidden = true)
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<Email> emails = new HashSet<>();
+//    @JsonIgnore
+//    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+//    private Account account;
 
-    @Schema(hidden = true)
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<Phone> phones = new HashSet<>();
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+//    private Set<Email> emails = new HashSet<>();
+
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+//    private Set<Phone> phones = new HashSet<>();
 }

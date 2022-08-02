@@ -24,7 +24,7 @@ public class Account {
     private BigDecimal balance;
 
     @NotNull
-    @OneToOne
-    @Column(name = "user_id", nullable = false, unique = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 }
