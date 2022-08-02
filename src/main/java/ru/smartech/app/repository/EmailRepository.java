@@ -7,11 +7,16 @@ import org.springframework.stereotype.Repository;
 import ru.smartech.app.entity.Email;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface EmailRepository extends JpaRepository<Email, Long> {
 
     @Query(nativeQuery = true,
-            value = "SELECT (*) FROM email_data e WHERE e.email = :email")
+            value = "SELECT * FROM email_data e WHERE e.email = :email")
     Optional<Email> findByEmail(@Param("email") String email);
+
+    @Query(nativeQuery = true,
+            value = "SELECT * FROM email_data e WHERE e.user_id = :userId")
+    Set<Email> findByUserId(@Param("userId") long userId);
 }

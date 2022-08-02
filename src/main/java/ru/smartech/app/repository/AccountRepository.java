@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query(nativeQuery = true,
-            value = "SELECT (*) FROM account a WHERE a.user_id := user_id")
+            value = "SELECT * FROM account a WHERE a.user_id = :userId")
     Optional<Account> findByUserId(@Param("userId") long userId);
 }

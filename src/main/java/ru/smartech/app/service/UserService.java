@@ -1,5 +1,6 @@
 package ru.smartech.app.service;
 
+import org.springframework.data.domain.Page;
 import ru.smartech.app.entity.User;
 
 import java.time.LocalDate;
@@ -8,11 +9,11 @@ import java.util.Optional;
 
 public interface UserService {
 
-    List<User> getByBirthDateFrom(LocalDate from);
+    Page<User> getByBirthDateFrom(LocalDate from, int page, int size);
 
     Optional<User> getByPhone(String phone);
 
-    List<User> getByNameLike(String name);
+    Page<User> getByNameLike(String name, int page, int size);
 
     Optional<User> getByEmail(String email);
 }

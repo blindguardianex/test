@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import ru.smartech.app.entity.User;
 
@@ -42,11 +43,11 @@ class UserRepositoryTest {
 
     @Test
     void getByBirthDateAfter() {
-        userRepository.getByBirthDateAfter(LocalDate.of(2022,8,2)).forEach(System.out::println);
+        userRepository.getByBirthDateAfter(LocalDate.of(2022,8,2), PageRequest.of(0,20)).forEach(System.out::println);
     }
 
     @Test
     void getByNameLike() {
-        userRepository.getByNameLike("mo").forEach(System.out::println);
+        userRepository.getByNameLike("mo", PageRequest.of(0,20)).forEach(System.out::println);
     }
 }

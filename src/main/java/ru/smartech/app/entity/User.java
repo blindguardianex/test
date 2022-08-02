@@ -14,10 +14,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Accessors(chain = true)
@@ -44,15 +41,34 @@ public class User {
     @Column(name = "birth_date", unique = true, nullable = false)
     private LocalDate birthDate;
 
-//    @JsonIgnore
-//    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-//    private Account account;
+    @Transient
+    private Account account;
+    @Transient
+    private Set<Email> emails;
+    @Transient
+    private Set<Phone> phones;
 
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private Set<Email> emails = new HashSet<>();
+    public Optional<Account> loadAccount(){
+        if (this.account == null)
+            return Optional.empty();
+        else
+            return Optional.of(account);
+    }
 
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private Set<Phone> phones = new HashSet<>();
+    public Set<Email> loadEmails(){
+        return this.emails;
+    }
+
+    public Set<Phone> loadPhones(){
+        return this.phones;
+    }
+
+    public User(User user) {
+        this.id = user.getId();
+        this.name = user.getName();
+        this.password = user.getPassword();
+        this.birthDate = user.getBirthDate();
+        this.emails = user.getEmails();
+        this.phones = user.getPhones();
+    }
 }
