@@ -2,8 +2,8 @@
 create table if not exists "user"
 (
     "id"        bigserial       PRIMARY KEY,
-    "name"        varchar(500)    not null,
-    "password"    varchar(500)    not null,
+    "name"      varchar(500)    not null,
+    "password"  varchar(500)    not null,
     birth_date  date            not null
 );
 comment on table "user" is 'Таблица пользователей';
