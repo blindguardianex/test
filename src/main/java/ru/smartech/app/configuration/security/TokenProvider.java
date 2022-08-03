@@ -1,14 +1,17 @@
 package ru.smartech.app.configuration.security;
 
 import io.jsonwebtoken.*;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import ru.smartech.app.entity.User;
+import ru.smartech.app.enums.Roles;
 import ru.smartech.app.service.TokenService;
 import ru.smartech.app.service.UserService;
 
@@ -17,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Date;
-import java.util.UUID;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -27,6 +30,7 @@ public class TokenProvider {
     private String secret;
     @Value("${token.access.expired:PT2H}")
     private Duration sessionTime;
+    private final String TOKEN_PREFIX = "Bearer ";
 
     private final TokenService tokenService;
     private final UserService userService;
@@ -44,19 +48,27 @@ public class TokenProvider {
     }
 
 
-    public String createToken(User user) {
-        String accessToken = createAccessToken(user);
-        addTokensToUser(user, accessToken);
+    public String createToken(UserInfo info) {
+        String accessToken = createAccessToken(info);
+        addTokensToUser(info, accessToken);
 
         return accessToken;
     }
 
     public Authentication getAuthentication(String token) {
-        UserDetails userDetails = tokenToUserDetails(token);
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        if (token.startsWith(TOKEN_PREFIX))
+            token = token.substring(TOKEN_PREFIX.length());
+
+        UserInfo info = tokenInfo(token);
+        return new AdvancedAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        info.getLogin(),
+                        "",
+                        List.of(new SimpleGrantedAuthority(Roles.USER.name())))
+                , info.getId());
     }
 
-    public String getUserId(String token) {
+    public String getLogin(String token) {
         try {
             return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
         } catch (ExpiredJwtException ex) {
@@ -64,15 +76,20 @@ public class TokenProvider {
         }
     }
 
-    public String tokenFromRequest(HttpServletRequest req) {
-        String bearerToken = req.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    public long getUserId(String token) {
+        try {
+            return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().get("userId", Long.class);
+        } catch (ExpiredJwtException ex) {
+            return 0;
         }
-        return null;
     }
 
     public boolean validateAccessToken(String token) {
+        if (token == null)
+            return false;
+        if (token.startsWith(TOKEN_PREFIX))
+            token = token.substring(TOKEN_PREFIX.length());
+
         try {
             Jws<Claims> claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
             if (claims.getBody().getExpiration().before(new Date())) {
@@ -90,9 +107,9 @@ public class TokenProvider {
         }
     }
 
-    private String createAccessToken(User user) {
-        Claims claims = Jwts.claims().setSubject(user.getName());
-        claims.put("id", user.getId());
+    private String createAccessToken(UserInfo user) {
+        Claims claims = Jwts.claims().setSubject(user.getLogin());
+        claims.put("userId", user.getId());
 
         Date now = new Date();
         Date validateDate = new Date(now.getTime() + sessionTime.toMillis());
@@ -105,26 +122,27 @@ public class TokenProvider {
                 .compact();
     }
 
-    private String createRefreshToken(String token) {
-        String tokenTail = token.substring(token.length() - 8);
-        String randomString = UUID.randomUUID().toString();
-        return tokenTail + "_" + randomString;
-    }
-
-    private UserDetails tokenToUserDetails(String token) {
-        String login = getUserId(token);
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(login)
-                .password("")
-                .authorities("USER")
+    private UserInfo tokenInfo(String token) {
+        String login = getLogin(token);
+        long id = getUserId(token);
+        return UserInfo.builder()
+                .login(login)
+                .id(id)
                 .build();
     }
 
-    private void addTokensToUser(final User user, String accessToken) {
-        tokenService.addToken(String.valueOf(user.getId()), accessToken);
+    private void addTokensToUser(final UserInfo user, String accessToken) {
+        tokenService.addToken(accessToken, String.valueOf(user.getId()));
     }
 
     private boolean validateRefreshToken(String refreshToken, String accessToken) {
         return refreshToken.startsWith(accessToken.substring(accessToken.length() - 8));
+    }
+
+    @Builder
+    @Getter
+    public static class UserInfo {
+        private final String login;
+        private final long id;
     }
 }
