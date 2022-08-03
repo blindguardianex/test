@@ -42,4 +42,4 @@ logging:
     root: info
     ru:
       smartech:
-        app: debug
+        app: info
