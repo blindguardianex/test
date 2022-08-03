@@ -11,12 +11,12 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class JpaAccountRepository implements AccountService {
+public class JpaAccountService implements AccountService {
 
     private final AccountRepository repository;
 
     @Autowired
-    public JpaAccountRepository(AccountRepository repository) {
+    public JpaAccountService(AccountRepository repository) {
         this.repository = repository;
     }
 

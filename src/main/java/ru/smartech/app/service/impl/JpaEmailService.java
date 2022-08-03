@@ -9,6 +9,8 @@ import ru.smartech.app.exceptions.NonExistEntity;
 import ru.smartech.app.repository.EmailRepository;
 import ru.smartech.app.service.EmailService;
 
+import java.util.Set;
+
 @Slf4j
 @Service
 public class JpaEmailService implements EmailService {
@@ -42,10 +44,10 @@ public class JpaEmailService implements EmailService {
                 .map(existed -> {
                     existed.setEmail(email.getEmail());
                     existed = repository.save(existed);
-                    log.info("IN update -> email \"{}\" from user {} successfully updated with id: {}", email.getEmail(), email.getUser().getId(), email.getId());
+                    log.info("IN update -> email \"{}\" from user {} successfully updated with id: {}", existed.getEmail(), existed.getUser().getId(), existed.getId());
                     return existed;
                 })
-                .orElseThrow(()->{
+                .orElseThrow(() -> {
                     log.error("IN update ->  email \"{}\" not exist", email.getEmail());
                     throw new NonExistEntity("Email \"" + email.getEmail() + "\" not exist");
                 });
@@ -54,7 +56,19 @@ public class JpaEmailService implements EmailService {
     @Override
     public void delete(Email email) {
         log.debug("IN delete -> deleting email \"{}\" with id {}", email.getEmail(), email.getId());
+        if (repository.findByUserId(email.getUser().getId()).size() < 2){
+            log.warn("Cannot removed single email from user");
+            throw new IllegalArgumentException("Cannot removed single email from user");
+        }
         repository.delete(email);
         log.info("IN delete -> email \"{}\" with id {} successfully deleted", email.getEmail(), email.getId());
+    }
+
+    @Override
+    public Set<Email> getByUserId(long userId) {
+        log.debug("IN getByUserId -> find emails by user with ID {}", userId);
+        var result = repository.findByUserId(userId);
+        log.info("IN getByUserId -> by user with ID {} was found {} emails", userId, result.size());
+        return result;
     }
 }

@@ -23,6 +23,7 @@
         <springdoc-openapi.version>1.6.6</springdoc-openapi.version>
         <!--    Utils    -->
         <jackson.datatype.version>2.13.0</jackson.datatype.version>
+        <json.web.token>0.9.1</json.web.token>
         <google.guava>31.0.1-jre</google.guava>
         <lombok.version>1.18.22</lombok.version>
         <jetbrains-annotations>23.0.0</jetbrains-annotations>
@@ -104,6 +105,11 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>${jackson.datatype.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>${json.web.token}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

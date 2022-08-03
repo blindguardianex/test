@@ -3,11 +3,14 @@ package ru.smartech.app.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.smartech.app.entity.Email;
 import ru.smartech.app.entity.Phone;
 import ru.smartech.app.exceptions.EntityAlreadyExist;
 import ru.smartech.app.exceptions.NonExistEntity;
 import ru.smartech.app.repository.PhoneRepository;
 import ru.smartech.app.service.PhoneService;
+
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -42,7 +45,7 @@ public class JpaPhoneService implements PhoneService {
                 .map(existed -> {
                     existed.setPhone(phone.getPhone());
                     existed = repository.save(existed);
-                    log.info("IN update -> phone \"{}\" from user {} successfully updated with id: {}", phone.getPhone(), phone.getUser().getId(), phone.getId());
+                    log.info("IN update -> phone \"{}\" from user {} successfully updated with id: {}", existed.getPhone(), existed.getUser().getId(), existed.getId());
                     return existed;
                 })
                 .orElseThrow(()->{
@@ -54,7 +57,19 @@ public class JpaPhoneService implements PhoneService {
     @Override
     public void delete(Phone phone) {
         log.debug("IN delete -> deleting email \"{}\" with id {}", phone.getPhone(), phone.getId());
+        if (repository.findByUserId(phone.getUser().getId()).size() < 2){
+            log.warn("Cannot removed single phone from user");
+            throw new IllegalArgumentException("Cannot removed single phone from user");
+        }
         repository.delete(phone);
         log.info("IN delete -> email \"{}\" with id {} successfully deleted", phone.getPhone(), phone.getId());
+    }
+
+    @Override
+    public Set<Phone> getByUserId(long userId) {
+        log.debug("IN getByUserId -> find phones by user with ID {}", userId);
+        var result = repository.findByUserId(userId);
+        log.info("IN getByUserId -> by user with ID {} was found {} phones", userId, result.size());
+        return result;
     }
 }

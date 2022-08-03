@@ -1,3 +1,16 @@
 spring:
   application:
     name: test-application
+
+application:
+  name: test-application
+  swagger:
+    enabled: true
+    title: Тестовое приложение
+    description: Тестовое приложение
+    version: 1.0.1
+    contactName: Dmitry Titov
+    contactUrl: https://github.com/blindguardianex
+    contactEmail: noEmail
+    servers: >
+      http://localhost:8080/test-application::Внешний API (шлюз) приложения
