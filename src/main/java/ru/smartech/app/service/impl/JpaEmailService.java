@@ -44,7 +44,7 @@ public class JpaEmailService implements EmailService {
                 .map(existed -> {
                     existed.setEmail(email.getEmail());
                     existed = repository.save(existed);
-                    log.info("IN update -> email \"{}\" from user {} successfully updated with id: {}", email.getEmail(), email.getUser().getId(), email.getId());
+                    log.info("IN update -> email \"{}\" from user {} successfully updated with id: {}", existed.getEmail(), existed.getUser().getId(), existed.getId());
                     return existed;
                 })
                 .orElseThrow(() -> {
@@ -56,6 +56,10 @@ public class JpaEmailService implements EmailService {
     @Override
     public void delete(Email email) {
         log.debug("IN delete -> deleting email \"{}\" with id {}", email.getEmail(), email.getId());
+        if (repository.findByUserId(email.getUser().getId()).size() < 2){
+            log.warn("Cannot removed single email from user");
+            throw new IllegalArgumentException("Cannot removed single email from user");
+        }
         repository.delete(email);
         log.info("IN delete -> email \"{}\" with id {} successfully deleted", email.getEmail(), email.getId());
     }

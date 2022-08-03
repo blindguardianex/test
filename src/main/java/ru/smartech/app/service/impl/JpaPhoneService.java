@@ -45,7 +45,7 @@ public class JpaPhoneService implements PhoneService {
                 .map(existed -> {
                     existed.setPhone(phone.getPhone());
                     existed = repository.save(existed);
-                    log.info("IN update -> phone \"{}\" from user {} successfully updated with id: {}", phone.getPhone(), phone.getUser().getId(), phone.getId());
+                    log.info("IN update -> phone \"{}\" from user {} successfully updated with id: {}", existed.getPhone(), existed.getUser().getId(), existed.getId());
                     return existed;
                 })
                 .orElseThrow(()->{
@@ -57,6 +57,10 @@ public class JpaPhoneService implements PhoneService {
     @Override
     public void delete(Phone phone) {
         log.debug("IN delete -> deleting email \"{}\" with id {}", phone.getPhone(), phone.getId());
+        if (repository.findByUserId(phone.getUser().getId()).size() < 2){
+            log.warn("Cannot removed single phone from user");
+            throw new IllegalArgumentException("Cannot removed single phone from user");
+        }
         repository.delete(phone);
         log.info("IN delete -> email \"{}\" with id {} successfully deleted", phone.getPhone(), phone.getId());
     }
