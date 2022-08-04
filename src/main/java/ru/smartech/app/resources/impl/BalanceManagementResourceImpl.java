@@ -29,6 +29,9 @@ public class BalanceManagementResourceImpl implements BalanceManagementResource 
             return ResponseEntity.badRequest().build();
 
         long initiator = securityCtx.getUserId();
-        return ResponseEntity.ok(balanceManager.transfer(initiator, transfer.getUserId(), transfer.getAmount()));
+        log.debug("Initialize transfer from user #{} to user #{} with amount {}", initiator, transfer.getUserId(), transfer.getAmount());
+        var result = balanceManager.transfer(initiator, transfer.getUserId(), transfer.getAmount());
+        log.info("Transfer from user #{} to user #{} with amount {} successfully completed", initiator, transfer.getUserId(), transfer.getAmount());
+        return ResponseEntity.ok(result);
     }
 }
