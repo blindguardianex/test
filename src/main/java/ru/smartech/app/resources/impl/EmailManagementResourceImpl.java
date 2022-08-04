@@ -9,20 +9,29 @@ import ru.smartech.app.entity.Email;
 import ru.smartech.app.entity.User;
 import ru.smartech.app.resources.EmailManagementResource;
 import ru.smartech.app.service.EmailService;
+import ru.smartech.app.service.SecurityService;
+
+import java.util.Optional;
 
 @Slf4j
 @RestController
 public class EmailManagementResourceImpl implements EmailManagementResource {
 
     private final EmailService emailService;
+    private final SecurityService securityService;
 
     @Autowired
-    public EmailManagementResourceImpl(EmailService emailService) {
+    public EmailManagementResourceImpl(EmailService emailService,
+                                       SecurityService securityService) {
         this.emailService = emailService;
+        this.securityService = securityService;
     }
 
     @Override
     public ResponseEntity<EmailDto> linkMail(String mail, long userId) {
+        if (!securityService.isPrincipal(userId))
+            return ResponseEntity.badRequest().build();
+
         return ResponseEntity.ok(
                 EmailDto.from(
                         emailService.add(
@@ -36,6 +45,10 @@ public class EmailManagementResourceImpl implements EmailManagementResource {
 
     @Override
     public ResponseEntity<EmailDto> updateMail(long mailId, String mail) {
+        var existed = emailService.findById(mailId);
+        if (existed.isEmpty() || !securityService.isPrincipal(existed.get().getUser().getId()))
+            return ResponseEntity.badRequest().build();
+
         return ResponseEntity.ok(
                 EmailDto.from(
                         emailService.update(
@@ -49,6 +62,9 @@ public class EmailManagementResourceImpl implements EmailManagementResource {
 
     @Override
     public ResponseEntity<EmailDto> unlinkMail(long mailId, long userId) {
+        if (!securityService.isPrincipal(userId))
+            return ResponseEntity.badRequest().build();
+
         emailService.delete(
                 new Email()
                         .setId(mailId)
