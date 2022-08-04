@@ -4,7 +4,6 @@ import com.google.common.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.smartech.app.entity.Email;
 import ru.smartech.app.entity.Phone;
 import ru.smartech.app.exceptions.EntityAlreadyExist;
 import ru.smartech.app.exceptions.NonExistEntity;
@@ -47,8 +46,9 @@ public class JpaPhoneService implements PhoneService {
             throw new EntityAlreadyExist("Email \"" + phone.getPhone() + "\" already exist");
         }
         phone = repository.save(phone);
-        if (cacheByUserId.getIfPresent(phone.getId()) != null){
-            Set<Phone> phones = cacheByUserId.getUnchecked(phone.getId());
+        if (cacheByUserId.getIfPresent(phone.getUser().getId()) != null) {
+            Set<Phone> phones = cacheByUserId.getUnchecked(phone.getUser().getId());
+            cacheByUserId.invalidate(phone.getUser().getId());
             phones.add(phone);
             cacheByUserId.put(phone.getId(), phones);
         }
@@ -67,10 +67,18 @@ public class JpaPhoneService implements PhoneService {
                     existed.setPhone(phone.getPhone());
                     existed = repository.save(existed);
                     cacheByPhoneId.put(phone.getId(), Optional.of(existed));
+                    if (cacheByUserId.getIfPresent(existed.getUser().getId()) != null) {
+                        Set<Phone> phones = cacheByUserId.getUnchecked(existed.getUser().getId());
+                        cacheByUserId.invalidate(existed.getUser().getId());
+                        final Long phoneId = existed.getId();
+                        phones.removeIf(m -> m.getId().equals(phoneId));
+                        phones.add(existed);
+                        cacheByUserId.put(existed.getId(), phones);
+                    }
                     log.info("IN update -> phone \"{}\" from user {} successfully updated with id: {}", existed.getPhone(), existed.getUser().getId(), existed.getId());
                     return existed;
                 })
-                .orElseThrow(()->{
+                .orElseThrow(() -> {
                     log.error("IN update ->  phone \"{}\" not exist", phone.getPhone());
                     throw new NonExistEntity("Email \"" + phone.getPhone() + "\" not exist");
                 });
@@ -79,15 +87,20 @@ public class JpaPhoneService implements PhoneService {
     @Override
     public void delete(Phone phone) {
         log.debug("IN delete -> deleting email \"{}\" with id {}", phone.getPhone(), phone.getId());
-        if (cacheByUserId.getUnchecked(phone.getUser().getId()).size() < 2){
+        if (cacheByUserId.getUnchecked(phone.getUser().getId()).size() < 2) {
             log.warn("Cannot removed single phone from user");
             throw new IllegalArgumentException("Cannot removed single phone from user");
         }
-        repository.delete(phone);
-        Set<Phone> phones = cacheByUserId.getUnchecked(phone.getId());
-        phones.remove(phone);
-        cacheByUserId.put(phone.getId(), phones);
-        log.info("IN delete -> email \"{}\" with id {} successfully deleted", phone.getPhone(), phone.getId());
+        repository.findById(phone.getId())
+                .ifPresent(ph -> {
+                    repository.delete(ph);
+                    if (cacheByUserId.getIfPresent(phone.getUser().getId()) != null) {
+                        Set<Phone> phones = cacheByUserId.getUnchecked(ph.getUser().getId());
+                        phones.removeIf(p -> p.getPhone().equalsIgnoreCase(ph.getPhone()));
+                        cacheByUserId.put(ph.getId(), phones);
+                    }
+                    log.info("IN delete -> phone \"{}\" with id {} successfully deleted", ph.getPhone(), ph.getId());
+                });
     }
 
     @Override

@@ -29,6 +29,7 @@ public class AuthenticationResourceImpl implements AuthenticationResource {
 
     @Override
     public ResponseEntity<String> mailSignIn(MailAuthenticationDto authRequest) {
+        log.debug("Getting mail authentication request with mail {}", authRequest.getEmail());
         var authenticate = (AdvancedAuthentication) authenticationManager.authenticate(MailPasswordAuthentication.from(authRequest));
         return ResponseEntity.ok(tokenProvider.createToken(
                 TokenProvider.UserInfo.builder()
@@ -39,6 +40,7 @@ public class AuthenticationResourceImpl implements AuthenticationResource {
 
     @Override
     public ResponseEntity<String> phoneSignIn(PhoneAuthenticationDto authRequest) {
+        log.debug("Getting phone authentication request with phone {}", authRequest.getPhone());
         var authenticate = (AdvancedAuthentication) authenticationManager.authenticate(PhonePasswordAuthentication.from(authRequest));
         return ResponseEntity.ok(tokenProvider.createToken(
                 TokenProvider.UserInfo.builder()

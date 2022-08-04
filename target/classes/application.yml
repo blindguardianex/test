@@ -13,4 +13,4 @@ application:
     contactUrl: https://github.com/blindguardianex
     contactEmail: noEmail
     servers: >
-      http://localhost:8080/test-application::Внешний API (шлюз) приложения
+      http://localhost:8080/test-application::API test application

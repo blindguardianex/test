@@ -46,8 +46,9 @@ public class JpaEmailService implements EmailService {
             throw new EntityAlreadyExist("Email \"" + email.getEmail() + "\" already exist");
         }
         email = repository.save(email);
-        if (cacheByUserId.getIfPresent(email.getId()) != null){
-            Set<Email> emails = cacheByUserId.getUnchecked(email.getId());
+        if (cacheByUserId.getIfPresent(email.getUser().getId()) != null) {
+            Set<Email> emails = cacheByUserId.getUnchecked(email.getUser().getId());
+            cacheByUserId.invalidate(email.getUser().getId());
             emails.add(email);
             cacheByUserId.put(email.getId(), emails);
         }
@@ -65,7 +66,15 @@ public class JpaEmailService implements EmailService {
                 .map(existed -> {
                     existed.setEmail(email.getEmail());
                     existed = repository.save(existed);
-                    cacheByMailId.put(email.getId(), Optional.of(existed));
+                    cacheByMailId.put(existed.getId(), Optional.of(existed));
+                    if (cacheByUserId.getIfPresent(existed.getUser().getId()) != null) {
+                        Set<Email> emails = cacheByUserId.getUnchecked(existed.getUser().getId());
+                        cacheByUserId.invalidate(existed.getUser().getId());
+                        final Long mailId = existed.getId();
+                        emails.removeIf(m -> m.getId().equals(mailId));
+                        emails.add(existed);
+                        cacheByUserId.put(existed.getId(), emails);
+                    }
                     log.info("IN update -> email \"{}\" from user {} successfully updated with id: {}", existed.getEmail(), existed.getUser().getId(), existed.getId());
                     return existed;
                 })
@@ -78,15 +87,20 @@ public class JpaEmailService implements EmailService {
     @Override
     public void delete(Email email) {
         log.debug("IN delete -> deleting email \"{}\" with id {}", email.getEmail(), email.getId());
-        if (cacheByUserId.getUnchecked(email.getUser().getId()).size() < 2){
+        if (cacheByUserId.getUnchecked(email.getUser().getId()).size() < 2) {
             log.warn("Cannot removed single email from user");
             throw new IllegalArgumentException("Cannot removed single email from user");
         }
-        repository.delete(email);
-        Set<Email> emails = cacheByUserId.getUnchecked(email.getId());
-        emails.remove(email);
-        cacheByUserId.put(email.getId(), emails);
-        log.info("IN delete -> email \"{}\" with id {} successfully deleted", email.getEmail(), email.getId());
+        repository.findById(email.getId())
+                .ifPresent(mail -> {
+                    repository.delete(mail);
+                    if (cacheByUserId.getIfPresent(email.getUser().getId()) != null) {
+                        Set<Email> emails = cacheByUserId.getUnchecked(mail.getUser().getId());
+                        emails.removeIf(m -> m.getEmail().equalsIgnoreCase(mail.getEmail()));
+                        cacheByUserId.put(mail.getId(), emails);
+                    }
+                    log.info("IN delete -> email \"{}\" with id {} successfully deleted", mail.getEmail(), mail.getId());
+                });
     }
 
     @Override

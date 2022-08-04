@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.smartech.app.exceptions.EntityAlreadyExist;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolationException;
 import java.nio.file.AccessDeniedException;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -37,6 +38,20 @@ public class GlobalErrorHandler {
                 .forEach(error->errorMap.put(
                         error.getField(),
                         String.format("%s, введенные данные: %s", error.getDefaultMessage(), error.getRejectedValue())));
+        return new ResponseEntity<>(
+                errorMap,
+                getErrorHttpHeaders(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @SneakyThrows
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected ResponseEntity<Map<String,String>>  handleBindException(HttpServletRequest request, ConstraintViolationException exception) {
+        var errorMap = processException(
+                MessageFormat.format("Недопустимый аргумент: {0}", exception.getMessage()),
+                exception
+        );
         return new ResponseEntity<>(
                 errorMap,
                 getErrorHttpHeaders(),

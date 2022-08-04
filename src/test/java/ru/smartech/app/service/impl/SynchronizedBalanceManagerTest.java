@@ -28,7 +28,7 @@ class SynchronizedBalanceManagerTest {
         CountDownLatch cdl = new CountDownLatch(count);
         for (int i = 0; i < count; i++) {
             executor.submit(() -> {
-                balanceManager.transfer(1, 2, new BigDecimal(10));
+                balanceManager.transfer(1, 2, new BigDecimal(10000000));
                 cdl.countDown();
             });
         }

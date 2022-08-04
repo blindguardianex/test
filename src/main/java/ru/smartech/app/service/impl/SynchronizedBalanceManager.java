@@ -32,6 +32,10 @@ public class SynchronizedBalanceManager implements BalanceManager {
         BalanceDto transferResult;
         try {
             Account from = getAccount(userIdFrom);
+            if (from.getBalance().compareTo(amount) < 0) {
+                log.info("Insufficient funds to transfer: on account {}, required {}", from.getBalance(), amount);
+                throw new IllegalArgumentException("Insufficient funds to transfer: on account " + from.getBalance() + ", required " + amount);
+            }
             Account to = getAccount(userIdTo);
             transferResult = transfer(from, to, amount);
         } finally {
@@ -44,7 +48,7 @@ public class SynchronizedBalanceManager implements BalanceManager {
         return accountService.findByUser(userId)
                 .orElseThrow(() -> {
                     log.error("IN transfer ->  account with user ID {} not exist", userId);
-                    throw new NonExistEntity("Account with user ID "+ userId +"not exist");
+                    throw new NonExistEntity("Account with user ID " + userId + "not exist");
                 });
     }
 
