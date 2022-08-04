@@ -2,6 +2,7 @@ package ru.smartech.app.resources.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import ru.smartech.app.dto.PhoneDto;
@@ -28,7 +29,7 @@ public class PhoneManagementResourceImpl implements PhoneManagementResource {
     @Override
     public ResponseEntity<PhoneDto> linkPhone(String phone, long userId) {
         if (!securityService.isPrincipal(userId))
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         return ResponseEntity.ok(
                 PhoneDto.from(
@@ -45,7 +46,7 @@ public class PhoneManagementResourceImpl implements PhoneManagementResource {
     public ResponseEntity<PhoneDto> updatePhone(long phoneId, String phone) {
         var existed = phoneService.findById(phoneId);
         if (existed.isEmpty() || !securityService.isPrincipal(existed.get().getUser().getId()))
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         return ResponseEntity.ok(
                 PhoneDto.from(
@@ -61,7 +62,7 @@ public class PhoneManagementResourceImpl implements PhoneManagementResource {
     @Override
     public ResponseEntity<PhoneDto> unlinkPhone(long phoneId, long userId) {
         if (!securityService.isPrincipal(userId))
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         phoneService.delete(
                 new Phone()

@@ -1,8 +1,5 @@
 package ru.smartech.app.service.impl;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +10,6 @@ import ru.smartech.app.service.AccountService;
 import ru.smartech.app.service.BalanceManager;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -36,9 +32,9 @@ public class SynchronizedBalanceManager implements BalanceManager {
         BalanceDto transferResult;
         try {
             Account from = getAccount(userIdFrom);
-            if (from.getBalance().compareTo(amount) < 0){
+            if (from.getBalance().compareTo(amount) < 0) {
                 log.info("Insufficient funds to transfer: on account {}, required {}", from.getBalance(), amount);
-                return BalanceDto.builder().userId(from.getId()).currentAmount(from.getBalance()).build();
+                throw new IllegalArgumentException("Insufficient funds to transfer: on account " + from.getBalance() + ", required " + amount);
             }
             Account to = getAccount(userIdTo);
             transferResult = transfer(from, to, amount);
@@ -52,7 +48,7 @@ public class SynchronizedBalanceManager implements BalanceManager {
         return accountService.findByUser(userId)
                 .orElseThrow(() -> {
                     log.error("IN transfer ->  account with user ID {} not exist", userId);
-                    throw new NonExistEntity("Account with user ID "+ userId +"not exist");
+                    throw new NonExistEntity("Account with user ID " + userId + "not exist");
                 });
     }
 

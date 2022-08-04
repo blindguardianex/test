@@ -2,6 +2,7 @@ package ru.smartech.app.resources.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import ru.smartech.app.dto.EmailDto;
@@ -30,7 +31,7 @@ public class EmailManagementResourceImpl implements EmailManagementResource {
     @Override
     public ResponseEntity<EmailDto> linkMail(String mail, long userId) {
         if (!securityService.isPrincipal(userId))
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         return ResponseEntity.ok(
                 EmailDto.from(
@@ -47,7 +48,7 @@ public class EmailManagementResourceImpl implements EmailManagementResource {
     public ResponseEntity<EmailDto> updateMail(long mailId, String mail) {
         var existed = emailService.findById(mailId);
         if (existed.isEmpty() || !securityService.isPrincipal(existed.get().getUser().getId()))
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         return ResponseEntity.ok(
                 EmailDto.from(
@@ -63,7 +64,7 @@ public class EmailManagementResourceImpl implements EmailManagementResource {
     @Override
     public ResponseEntity<EmailDto> unlinkMail(long mailId, long userId) {
         if (!securityService.isPrincipal(userId))
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         emailService.delete(
                 new Email()
