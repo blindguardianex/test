@@ -10,8 +10,10 @@ import ru.smartech.app.repository.AccountRepository;
 import ru.smartech.app.service.AccountService;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,5 +44,10 @@ public class JpaAccountService implements AccountService {
     @Override
     public Account update(Account account) {
         return repository.save(account);
+    }
+
+    @Override
+    public List<Account> getAll() {
+        return repository.findAll();
     }
 }
