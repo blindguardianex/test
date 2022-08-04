@@ -2,6 +2,7 @@ package ru.smartech.app.service;
 
 import ru.smartech.app.entity.Email;
 
+import java.util.Optional;
 import java.util.Set;
 
 public interface EmailService {
@@ -13,4 +14,6 @@ public interface EmailService {
     void delete(Email email);
 
     Set<Email> getByUserId(long userId);
+
+    Optional<Email> findById(long mailId);
 }

@@ -25,4 +25,13 @@ public class SecurityServiceImpl implements SecurityService{
 
         return (AdvancedAuthentication) tokenProvider.getAuthentication(token);
     }
+
+    @Override
+    public boolean isPrincipal(long userId) {
+        AdvancedAuthentication auth = SecurityService.getAdvancedContext();
+        if (auth == null)
+            return false;
+        else
+            return auth.getUserId() == userId;
+    }
 }

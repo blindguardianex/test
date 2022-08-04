@@ -3,11 +3,18 @@ package ru.smartech.app.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.smartech.app.dto.BalanceDto;
 import ru.smartech.app.entity.Account;
+import ru.smartech.app.exceptions.NonExistEntity;
 import ru.smartech.app.repository.AccountRepository;
 import ru.smartech.app.service.AccountService;
 
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
@@ -30,5 +37,10 @@ public class JpaAccountService implements AccountService {
             log.info("IN findByUser -> by user ID {} was NOT found account", userId);
         }
         return account;
+    }
+
+    @Override
+    public Account update(Account account) {
+        return repository.save(account);
     }
 }

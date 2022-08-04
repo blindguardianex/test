@@ -10,6 +10,8 @@ public interface SecurityService {
 
     AdvancedAuthentication validate(String token);
 
+    boolean isPrincipal(long userId);
+
     @Nullable
     static AdvancedAuthentication getAdvancedContext() {
         if (SecurityContextHolder.getContext() == null)
