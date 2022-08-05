@@ -28,8 +28,8 @@ public class SynchronizedBalanceManager implements BalanceManager {
 
     @Override
     public BalanceDto transfer(long userIdFrom, long userIdTo, BigDecimal amount) {
-        lock.lock();
         BalanceDto transferResult;
+        lock.lock();
         try {
             Account from = getAccount(userIdFrom);
             if (from.getBalance().compareTo(amount) < 0) {
