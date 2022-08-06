@@ -21,7 +21,7 @@ import javax.validation.Valid;
 public interface BalanceManagementResource {
 
 
-    @Operation(summary = "Присоединить почту к пользователю")
+    @Operation(summary = "Перевести денежные средства")
     @PostMapping("/transfer")
     ResponseEntity<BalanceDto> transfer(
             @Parameter(description = "ДТО трансфера") @Valid @RequestBody TransferDto transfer);
