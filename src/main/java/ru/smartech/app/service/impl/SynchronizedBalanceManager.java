@@ -3,9 +3,11 @@ package ru.smartech.app.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.smartech.app.dto.BalanceDto;
 import ru.smartech.app.entity.Account;
 import ru.smartech.app.exceptions.NonExistEntity;
+import ru.smartech.app.exceptions.TransferException;
 import ru.smartech.app.service.AccountService;
 import ru.smartech.app.service.BalanceManager;
 
@@ -27,6 +29,7 @@ public class SynchronizedBalanceManager implements BalanceManager {
     }
 
     @Override
+    @Transactional
     public BalanceDto transfer(long userIdFrom, long userIdTo, BigDecimal amount) {
         BalanceDto transferResult;
         lock.lock();
@@ -38,9 +41,12 @@ public class SynchronizedBalanceManager implements BalanceManager {
             }
             Account to = getAccount(userIdTo);
             transferResult = transfer(from, to, amount);
+        } catch (Exception e) {
+            throw new TransferException(e.getMessage());
         } finally {
             lock.unlock();
         }
+        log.info("IN transfer -> successfully transfer {} from user #{} to user #{}", amount, userIdFrom, userIdTo);
         return transferResult;
     }
 
@@ -57,7 +63,15 @@ public class SynchronizedBalanceManager implements BalanceManager {
         from.setBalance(from.getBalance().subtract(amount));
         to.setBalance(to.getBalance().add(amount));
         accountService.update(from);
-        accountService.update(to);
+        try {
+            accountService.update(to);
+        } catch (Exception e) {
+            log.info("IN transfer -> was happen exception when update account-recipient. Cancelled transaction...");
+            from.setBalance(from.getBalance().add(amount));
+            accountService.update(from);
+            log.error("IN transfer -> transfer {} from acc #{} to acc #{} successfully canceled", amount, from.getId(), to.getId());
+            throw new RuntimeException(e.getMessage());
+        }
         log.info("End balance\n\t\tFrom balance #{}: {}\n\t\tTo balance #{}: {}", from.getId(), from.getBalance(), to.getId(), to.getBalance());
         return BalanceDto.builder().userId(from.getId()).currentAmount(from.getBalance()).build();
     }

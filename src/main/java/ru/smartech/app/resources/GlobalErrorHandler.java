@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.smartech.app.exceptions.EntityAlreadyExist;
+import ru.smartech.app.exceptions.TransferException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
@@ -64,6 +65,17 @@ public class GlobalErrorHandler {
         return new ResponseEntity<>(
                 processException(
                         MessageFormat.format("Сущность уже существует: {0}", exception.getMessage()),
+                        exception),
+                getErrorHttpHeaders(),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(TransferException.class)
+    public ResponseEntity<Map<String,String>> transferException(TransferException exception) {
+        return new ResponseEntity<>(
+                processException(
+                        MessageFormat.format("Ошибка перевода денежных средств: {0}", exception.getMessage()),
                         exception),
                 getErrorHttpHeaders(),
                 HttpStatus.CONFLICT

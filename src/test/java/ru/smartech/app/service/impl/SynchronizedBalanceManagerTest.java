@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.smartech.app.entity.Account;
 import ru.smartech.app.entity.User;
+import ru.smartech.app.exceptions.TransferException;
 import ru.smartech.app.service.AccountService;
 import ru.smartech.app.service.BalanceManager;
 
@@ -182,7 +183,7 @@ class SynchronizedBalanceManagerTest {
     }
 
     @Test
-    void transfer_error() {
+    void transfer_insufficientFunds() {
         final long userFromId = 1L;
         final long userToId = 2L;
         final long startBalanceFrom = 1000;
@@ -194,8 +195,37 @@ class SynchronizedBalanceManagerTest {
                     return Optional.of(mockAccounts.get(userId));
                 });
         assertThrows(
-                IllegalArgumentException.class,
+                TransferException.class,
                 () -> balanceManager.transfer(userFromId, userToId, new BigDecimal(startBalanceFrom * 2)));
+    }
+
+    @Test
+    void transfer_transactionalError(){
+        final long userFromId = 1L;
+        final long userToId = 2L;
+        final long startBalanceFrom = 1000;
+        final long startBalanceTo = 1500;
+        Map<Long, Account> mockAccounts = createMockAccounts(2, startBalanceFrom, startBalanceTo);
+
+        Mockito.when(accountServiceMock.findByUser(anyLong()))
+                .thenAnswer(invoc -> {
+                    long userId = invoc.getArgument(0, Long.class);
+                    return Optional.of(copy(mockAccounts.get(userId)));
+                });
+        Mockito.when(accountServiceMock.update(any()))
+                .thenAnswer(invoc -> {
+                    Account acc = invoc.getArgument(0, Account.class);
+                    if (acc.getId()==userToId){
+                        throw new RuntimeException("Any transactional error");
+                    }
+                    mockAccounts.put(acc.getUser().getId(), acc);
+                    return copy(acc);
+                });
+        assertThrows(
+                TransferException.class,
+                () -> balanceManager.transfer(userFromId, userToId, new BigDecimal(startBalanceFrom/2)));
+        assertEquals(new BigDecimal(startBalanceFrom), mockAccounts.get(userFromId).getBalance());
+        assertEquals(new BigDecimal(startBalanceTo), mockAccounts.get(userToId).getBalance());
     }
 
     private Map<Long, Account> createMockAccounts(int count, long... balances) {
