@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.smartech.app.entity.Account;
+import ru.smartech.app.entity.User;
 import ru.smartech.app.repository.AccountRepository;
 import ru.smartech.app.service.AccountService;
 
@@ -30,6 +31,18 @@ public class JpaAccountService implements AccountService {
             log.info("IN findByUser -> by user ID {} was found account with ID {}", userId, account.get().getId());
         } else {
             log.info("IN findByUser -> by user ID {} was NOT found account", userId);
+        }
+        return account;
+    }
+
+    @Override
+    public Optional<Account> pessimisticFindByUser(long userId) {
+        log.debug("IN pessimisticFindByUser -> find account by user ID {}", userId);
+        var account = repository.pessimisticFindByUserId(new User().setId(userId));
+        if (account.isPresent()) {
+            log.info("IN pessimisticFindByUser -> by user ID {} was found account with ID {}", userId, account.get().getId());
+        } else {
+            log.info("IN pessimisticFindByUser -> by user ID {} was NOT found account", userId);
         }
         return account;
     }

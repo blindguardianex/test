@@ -12,6 +12,8 @@ public interface AccountService {
 
     Optional<Account> findByUser(long userId);
 
+    Optional<Account> pessimisticFindByUser(long userId);
+
     Account update(Account account);
 
     List<Account> getAll();

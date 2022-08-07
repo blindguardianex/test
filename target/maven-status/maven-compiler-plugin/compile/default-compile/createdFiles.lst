@@ -19,12 +19,14 @@ ru\smartech\app\utils\Caches$1.class
 ru\smartech\app\dto\UserProfileDto$UserProfileDtoBuilder.class
 ru\smartech\app\schedule\IncrementScheduler$IncrementInfo$IncrementInfoBuilder.class
 ru\smartech\app\schedule\IncrementScheduler$IncrementInfo.class
+ru\smartech\app\service\impl\TransactionalBalanceManager.class
 ru\smartech\app\configuration\security\TokenProvider$UserInfo.class
 ru\smartech\app\dto\EmailDto$EmailDtoBuilder.class
 ru\smartech\app\resources\BalanceManagementResource.class
 ru\smartech\app\exceptions\EntityAlreadyExist.class
 ru\smartech\app\service\BalanceManager.class
 ru\smartech\app\service\impl\CacheTokenService.class
+ru\smartech\app\exceptions\TransferException.class
 ru\smartech\app\resources\impl\EmailManagementResourceImpl.class
 ru\smartech\app\configuration\security\PhoneAuthenticationProvider.class
 ru\smartech\app\service\impl\SecurityServiceImpl.class

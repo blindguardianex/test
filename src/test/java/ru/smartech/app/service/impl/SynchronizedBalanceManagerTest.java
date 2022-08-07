@@ -3,6 +3,7 @@ package ru.smartech.app.service.impl;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.smartech.app.entity.Account;
@@ -33,7 +34,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 class SynchronizedBalanceManagerTest {
 
     @Autowired
-    private BalanceManager balanceManager;
+    @Qualifier("synchronizedBalanceManager")
+    private BalanceManager synchronizedBalanceManager;
     @MockBean
     private AccountService accountServiceMock;
     private final ExecutorService executor = Executors.newFixedThreadPool(60);
@@ -66,7 +68,7 @@ class SynchronizedBalanceManagerTest {
         for (int i = 0; i < transferCount; i++) {
             executor.submit(() -> {
                 try {
-                    balanceManager.transfer(userFromId, userToId, new BigDecimal(transferAmount));
+                    synchronizedBalanceManager.transfer(userFromId, userToId, new BigDecimal(transferAmount));
                 } finally {
                     cdl.countDown();
                 }
@@ -116,7 +118,7 @@ class SynchronizedBalanceManagerTest {
                 case 0: {
                     executor.submit(() -> {
                         try {
-                            balanceManager.transfer(userOneId, userTwoId, new BigDecimal(transferAmount));
+                            synchronizedBalanceManager.transfer(userOneId, userTwoId, new BigDecimal(transferAmount));
                         } finally {
                             cdl.countDown();
                         }
@@ -126,7 +128,7 @@ class SynchronizedBalanceManagerTest {
                 case 1: {
                     executor.submit(() -> {
                         try {
-                            balanceManager.transfer(userTwoId, userThreeId, new BigDecimal(transferAmount));
+                            synchronizedBalanceManager.transfer(userTwoId, userThreeId, new BigDecimal(transferAmount));
                         } finally {
                             cdl.countDown();
                         }
@@ -136,7 +138,7 @@ class SynchronizedBalanceManagerTest {
                 case 2: {
                     executor.submit(() -> {
                         try {
-                            balanceManager.transfer(userTwoId, userOneId, new BigDecimal(transferAmount));
+                            synchronizedBalanceManager.transfer(userTwoId, userOneId, new BigDecimal(transferAmount));
                         } finally {
                             cdl.countDown();
                         }
@@ -146,7 +148,7 @@ class SynchronizedBalanceManagerTest {
                 case 3: {
                     executor.submit(() -> {
                         try {
-                            balanceManager.transfer(userThreeId, userOneId, new BigDecimal(transferAmount));
+                            synchronizedBalanceManager.transfer(userThreeId, userOneId, new BigDecimal(transferAmount));
                         } finally {
                             cdl.countDown();
                         }
@@ -196,7 +198,7 @@ class SynchronizedBalanceManagerTest {
                 });
         assertThrows(
                 TransferException.class,
-                () -> balanceManager.transfer(userFromId, userToId, new BigDecimal(startBalanceFrom * 2)));
+                () -> synchronizedBalanceManager.transfer(userFromId, userToId, new BigDecimal(startBalanceFrom * 2)));
     }
 
     @Test
@@ -223,7 +225,7 @@ class SynchronizedBalanceManagerTest {
                 });
         assertThrows(
                 TransferException.class,
-                () -> balanceManager.transfer(userFromId, userToId, new BigDecimal(startBalanceFrom/2)));
+                () -> synchronizedBalanceManager.transfer(userFromId, userToId, new BigDecimal(startBalanceFrom/2)));
         assertEquals(new BigDecimal(startBalanceFrom), mockAccounts.get(userFromId).getBalance());
         assertEquals(new BigDecimal(startBalanceTo), mockAccounts.get(userToId).getBalance());
     }
