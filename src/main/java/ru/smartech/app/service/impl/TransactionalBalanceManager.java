@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.smartech.app.dto.BalanceDto;
 import ru.smartech.app.entity.Account;
@@ -18,42 +19,35 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
-@Primary
-public class SynchronizedBalanceManager implements BalanceManager {
+public class TransactionalBalanceManager implements BalanceManager {
 
     private final AccountService accountService;
-    private final Lock lock;
 
     @Autowired
-    public SynchronizedBalanceManager(AccountService accountService) {
+    public TransactionalBalanceManager(AccountService accountService) {
         this.accountService = accountService;
-        this.lock = new ReentrantLock();
     }
 
     @Override
-    @Transactional
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     public BalanceDto transfer(long userIdFrom, long userIdTo, BigDecimal amount) {
         BalanceDto transferResult;
-        lock.lock();
-        try {
-            Account from = getAccount(userIdFrom);
-            if (from.getBalance().compareTo(amount) < 0) {
-                log.info("IN transfer -> insufficient funds to transfer: on account {}, required {}", from.getBalance(), amount);
-                throw new IllegalArgumentException("Insufficient funds to transfer: on account " + from.getBalance() + ", required " + amount);
-            }
-            Account to = getAccount(userIdTo);
-            transferResult = transfer(from, to, amount);
-        } catch (Exception e) {
-            throw new TransferException(e.getMessage());
-        } finally {
-            lock.unlock();
+        Account from = getAccount(userIdFrom);
+        if (from.getBalance().compareTo(amount) < 0) {
+            log.info("IN transfer -> insufficient funds to transfer: on account {}, required {}", from.getBalance(), amount);
+            throw new IllegalArgumentException("Insufficient funds to transfer: on account " + from.getBalance() + ", required " + amount);
         }
+        Account to = getAccount(userIdTo);
+        transferResult = transfer(from, to, amount);
         log.info("IN transfer -> successfully transfer {} from user #{} to user #{}", amount, userIdFrom, userIdTo);
         return transferResult;
     }
 
     private Account getAccount(long userId) {
-        return accountService.findByUser(userId)
+        return accountService.pessimisticFindByUser(userId)
                 .orElseThrow(() -> {
                     log.error("IN transfer ->  account with user ID {} not exist", userId);
                     throw new NonExistEntity("Account with user ID " + userId + "not exist");
