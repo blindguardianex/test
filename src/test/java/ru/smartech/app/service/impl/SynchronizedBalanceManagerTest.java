@@ -3,6 +3,7 @@ package ru.smartech.app.service.impl;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.smartech.app.entity.Account;
@@ -33,6 +34,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 class SynchronizedBalanceManagerTest {
 
     @Autowired
+    @Qualifier("synchronizedBalanceManager")
     private BalanceManager synchronizedBalanceManager;
     @MockBean
     private AccountService accountServiceMock;

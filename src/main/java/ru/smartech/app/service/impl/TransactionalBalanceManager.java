@@ -2,6 +2,7 @@ package ru.smartech.app.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -18,7 +19,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-@Service
+@Service("transactionalBalanceManager")
 public class TransactionalBalanceManager implements BalanceManager {
 
     private final AccountService accountService;
@@ -38,7 +39,7 @@ public class TransactionalBalanceManager implements BalanceManager {
         Account from = getAccount(userIdFrom);
         if (from.getBalance().compareTo(amount) < 0) {
             log.info("IN transfer -> insufficient funds to transfer: on account {}, required {}", from.getBalance(), amount);
-            throw new IllegalArgumentException("Insufficient funds to transfer: on account " + from.getBalance() + ", required " + amount);
+            throw new TransferException("Insufficient funds to transfer: on account " + from.getBalance() + ", required " + amount);
         }
         Account to = getAccount(userIdTo);
         transferResult = transfer(from, to, amount);

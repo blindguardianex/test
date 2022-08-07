@@ -18,6 +18,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             value = "SELECT * FROM account a WHERE a.user_id = :userId")
     Optional<Account> findByUserId(@Param("userId") long userId);
 
+//    @Query(nativeQuery = true,
+//            value = "SELECT * FROM account a WHERE a.user_id = :userId FOR UPDATE")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Account a WHERE a.user = :user")
     Optional<Account> pessimisticFindByUserId(User user);

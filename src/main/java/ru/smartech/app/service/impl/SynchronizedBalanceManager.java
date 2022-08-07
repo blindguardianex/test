@@ -17,7 +17,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-@Service
+@Service("synchronizedBalanceManager")
 @Primary
 public class SynchronizedBalanceManager implements BalanceManager {
 
@@ -31,7 +31,6 @@ public class SynchronizedBalanceManager implements BalanceManager {
     }
 
     @Override
-    @Transactional
     public BalanceDto transfer(long userIdFrom, long userIdTo, BigDecimal amount) {
         BalanceDto transferResult;
         lock.lock();
